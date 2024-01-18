@@ -1,6 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
+from PyQt5.QtGui import QPixmap, QIcon, QFont, QCursor
+from PyQt5.QtCore import QRect, QSize, QTimer, Qt
 import math
 import random
 
@@ -18,49 +18,31 @@ question_selector = 1
 skipped_questions = []
 window_width = 1200
 window_height = 782
-window_center = int(window_width/2)
+window_center = int(window_width / 2)
+
 dmv_data = open("question_data.txt", "r")
 dmv_lines = dmv_data.readlines()
+dmv_data.close()
+
 correct_data = open("correct_answers.txt", "r")
 cl = correct_data.readlines()
-correct_lines = []
-for sub in cl:
-    correct_lines.append(sub.replace("\n", ""))
+correct_data.close()
+
+correct_lines = [sub.strip() for sub in cl]
+
 correct_counter = 0
 wrong_counter = 0
 location_list = []
 
 question_count = len(dmv_lines) / 5
-
-question_iterator = 0
 if question_limit > question_count:
     question_limit = int(question_count)
 
-shuffle_question = []
-while question_iterator < question_count:
-    shuffle_question.append(question_iterator)
-    question_iterator += 1
+shuffle_question = list(range(int(question_count)))
 random.shuffle(shuffle_question)
 
-group_dmv_data = []
-g = 0
-gdd_line_start = 0
-gdd_line_end = 5
-while g < question_count:
-    group_dmv_data.append(dmv_lines[gdd_line_start:gdd_line_end])
-    gdd_line_start = gdd_line_start + 5
-    gdd_line_end = gdd_line_end + 5
-    g += 1
-
-group_answer_data = []
-question_iterator = 0
-gad_line_start = 0
-gad_line_end = 2
-while question_iterator < question_count:
-    group_answer_data.append(correct_lines[gad_line_start:gad_line_end])
-    gad_line_start = gad_line_start + 2
-    gad_line_end = gad_line_end + 2
-    question_iterator += 1
+group_dmv_data = [dmv_lines[i:i + 5] for i in range(0, len(dmv_lines), 5)]
+group_answer_data = [correct_lines[i:i + 2] for i in range(0, len(correct_lines), 2)]
 
 correct_answer = ""
 correct_bool = False
@@ -69,8 +51,8 @@ wrong_pixmap_width = 6969
 wrong_pixmap_height = 0
 right_pixmap_width = 6969
 right_pixmap_height = 6969
-clickable_butt = True
-submittable = False
+is_clickable = True
+is_submittable = False
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -82,64 +64,23 @@ class Ui_MainWindow(object):
         right_pixmap = right_pixmap.scaled(50, 50, QtCore.Qt.KeepAspectRatio)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.border = QtWidgets.QLabel(self.centralwidget)
-        self.border.setGeometry(QtCore.QRect(100, 6969, 1001, 451))
-        self.border.setStyleSheet(f"border :10px solid {primary_color};")
-        self.border.setText("")
-        self.border.setObjectName("border")
-        self.topbar = QtWidgets.QLabel(self.centralwidget)
-        self.topbar.setGeometry(QtCore.QRect(0, 0, 1201, 71))
-        self.topbar.setStyleSheet(f"border :100px solid {primary_color};")
-        self.topbar.setText("")
-        self.topbar.setObjectName("topbar")
+        self.border = self.create_bar_ui(self.centralwidget, QtCore.QRect(100, 6969, 1001, 451), f"border :10px solid {primary_color};", "border")
+        self.topbar = self.create_bar_ui(self.centralwidget, QtCore.QRect(0, 0, 1201, 71), f"border :100px solid {primary_color};", "topbar")
         self.top_label = self.create_label("top_label", self.centralwidget, QtCore.QRect(0, 5, 1201, 61), 40, False, True, 50, "text-align: center;", QtCore.Qt.AlignCenter)
         self.initial_label = self.create_label("question_label", self.centralwidget, QtCore.QRect(140, 6969, 1000, 200), 42, True, False, 75, "", QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.start_button = QtWidgets.QPushButton(self.centralwidget)
-        self.start_button.setGeometry(QtCore.QRect(430, 600, 341, 71))
-        font = QtGui.QFont()
-        font.setPointSize(30)
-        font.setBold(True)
-        font.setWeight(75)
-        self.start_button.setFont(font)
-        self.start_button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.start_button.setStyleSheet(f"background-color: {primary_color}; color:white; border-radius: 7px;")
-        self.start_button.setObjectName("start_button")
-        self.start_button.clicked.connect(self.add_questionui)
+        self.start_button = self.create_start_button("start_button", QtCore.QRect(430, 600, 341, 71), self.add_questionui, self.centralwidget, primary_color)
         self.question_label = self.create_label("question_label", self.centralwidget, QtCore.QRect(140, 6969, 1000, 200), 22, True, False, 75, "", QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.button_A = self.create_button("button_A", lambda: self.select_answer('A'), self.centralwidget, QtCore.QRect(160, 6969, 800, 21), QtCore.QSize(0, 0), 18, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), False)
         self.button_B = self.create_button("button_B", lambda: self.select_answer('B'), self.centralwidget, QtCore.QRect(160, 6969, 800, 21), QtCore.QSize(0, 0), 18, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), False)
         self.button_C = self.create_button("button_C", lambda: self.select_answer('C'), self.centralwidget, QtCore.QRect(160, 6969, 800, 21), QtCore.QSize(0, 0), 18, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), False)
         if four_options_enabled == True:
             self.button_D = self.create_button("button_D", lambda: self.select_answer('D'), self.centralwidget, QtCore.QRect(160, 6969, 800, 21), QtCore.QSize(0, 0), 18, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), False)
-        self.button_noinput = QtWidgets.QRadioButton(self.centralwidget)
-        self.button_noinput.setGeometry(QtCore.QRect(160, 6969, 361, 21))
-        font = QtGui.QFont()
-        font.setPointSize(17)
-        self.button_noinput.setFont(font)
-        self.button_noinput.setStyleSheet("width: 55px;\n"
-                                    "height: 55px;")
-        self.button_noinput.setIconSize(QtCore.QSize(100, 100))
-        self.button_noinput.setChecked(True)
-        self.button_noinput.setObjectName("no_input")
-
-        self.right_img = QtWidgets.QLabel(self.centralwidget)
-        self.right_pixmap = QPixmap('right.png')
-        self.right_img.setPixmap(self.right_pixmap)
-        self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
-        self.right_img.setPixmap(right_pixmap)
-        self.right_img.resize(right_pixmap.width(), right_pixmap.height())
-        self.right_img.setObjectName("right_img")
-
-        self.wrong_img = QtWidgets.QLabel(self.centralwidget)
-        self.wrong_pixmap = QPixmap('wrong.png')
-        self.wrong_img.setPixmap(self.wrong_pixmap)
-        self.wrong_img.setGeometry(QtCore.QRect(wrong_pixmap_width, wrong_pixmap_height, 100, 100))
-        self.wrong_img.setPixmap(wrong_pixmap)
-        self.wrong_img.resize(wrong_pixmap.width(), wrong_pixmap.height())
-        self.wrong_img.setObjectName("wrong_img")
+        self.button_noinput = self.create_button("no_input", None, self.centralwidget, QtCore.QRect(160, 6969, 361, 21), QtCore.QSize(100, 100), 17, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), True)
+        self.right_img = self.create_img_label('right.png', "right_img", right_pixmap_width, right_pixmap_height)
+        self.wrong_img = self.create_img_label('wrong.png', "wrong_img", wrong_pixmap_width, wrong_pixmap_height)
         self.submit_button = self.create_submit_button("submit_button", QtCore.QRect(430, 6969, 341, 71), self.submit_click, self.centralwidget, primary_color)
         self.submit_button_2 = self.create_submit_button("submit_button_2", QtCore.QRect(50, 6969, 341, 71), self.skip_click, self.centralwidget, primary_color)
-        self.submit_button_3 = self.create_submit_button("submit_button_3", QtCore.QRect(810, 6969, 341, 71), self.quitlmao, self.centralwidget, primary_color)
+        self.submit_button_3 = self.create_submit_button("submit_button_3", QtCore.QRect(810, 6969, 341, 71), self.quit_program, self.centralwidget, primary_color)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1200, 24))
@@ -149,34 +90,28 @@ class Ui_MainWindow(object):
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
         self.statusbar.hide()
-        self.counter = QtWidgets.QLabel(self.centralwidget)
-        self.counter.setGeometry(QtCore.QRect(145, 650, 921, 101))
-        font = QtGui.QFont()
-        font.setFamily(".AppleSystemUIFont")
-        font.setPointSize(22)
-        font.setBold(True)
-        font.setWeight(75)
-        self.counter.setFont(font)
-        self.counter.setAlignment(QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.counter.setObjectName("counter")
+        self.counter = self.create_label("counter", self.centralwidget, QtCore.QRect(145, 650, 921, 101), 22, True, False, 75, "", QtCore.Qt.AlignLeading | QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
         self.retranslate_ui(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.initial_layout()
 
-    def create_button(self, name, select_method, widget, rect, size, font_size, style, icon_size, checked):
-        button = QtWidgets.QRadioButton(widget)
-        button.setGeometry(rect)
-        button.setSizeIncrement(size)
-        font = QtGui.QFont()
-        font.setPointSize(font_size)
-        button.setFont(font)
-        button.setLayoutDirection(QtCore.Qt.LeftToRight)
-        button.setStyleSheet(style)
-        button.setIconSize(icon_size)
-        button.setChecked(checked)
-        button.setObjectName(name)
-        button.clicked.connect(select_method)
-        return button
+    def create_bar_ui(self, widget, geometry, style, object_name):
+        border = QtWidgets.QLabel(widget)
+        border.setGeometry(geometry)
+        border.setStyleSheet(style)
+        border.setText("")
+        border.setObjectName(object_name)
+        return border
+
+    def create_img_label(self, img_file, object_name, pixmap_width, pixmap_height):
+        img_label = QtWidgets.QLabel(self.centralwidget)
+        pixmap = QPixmap(img_file)
+        img_label.setPixmap(pixmap)
+        img_label.setGeometry(QtCore.QRect(pixmap_width, pixmap_height, 100, 100))
+        img_label.setPixmap(pixmap)
+        img_label.resize(pixmap.width(), pixmap.height())
+        img_label.setObjectName(object_name)
+        return img_label
 
     def create_label(self, name, widget, rect, font_size, bold, italic, weight, style, alignment):
         label = QtWidgets.QLabel(widget)
@@ -192,6 +127,36 @@ class Ui_MainWindow(object):
         label.setObjectName(name)
         return label
 
+    def create_button(self, name, select_method, widget, rect, size, font_size, style, icon_size, checked):
+        button = QtWidgets.QRadioButton(widget)
+        button.setGeometry(rect)
+        button.setSizeIncrement(size)
+        font = QtGui.QFont()
+        font.setPointSize(font_size)
+        button.setFont(font)
+        button.setLayoutDirection(QtCore.Qt.LeftToRight)
+        button.setStyleSheet(style)
+        button.setIconSize(icon_size)
+        button.setChecked(checked)
+        button.setObjectName(name)
+        if select_method is not None:
+            button.clicked.connect(select_method)
+        return button
+
+    def create_start_button(self, name, geometry, click_action, centralwidget, primary_color):
+        button = QtWidgets.QPushButton(centralwidget)
+        button.setGeometry(geometry)
+        font = QtGui.QFont()
+        font.setPointSize(30)
+        font.setBold(True)
+        font.setWeight(75)
+        button.setFont(font)
+        button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        button.setStyleSheet(f"background-color: {primary_color}; color:white; border-radius: 7px;")
+        button.setObjectName(name)
+        button.clicked.connect(click_action)
+        return button
+
     def create_submit_button(self, name, geometry, click_action, centralwidget, primary_color):
         button = QtWidgets.QPushButton(centralwidget)
         button.setGeometry(geometry)
@@ -206,23 +171,23 @@ class Ui_MainWindow(object):
         button.clicked.connect(click_action)
         return button
 
-    def quitlmao(self):
-        if clickable_butt == True:
+    def quit_program(self):
+        if is_clickable == True:
             self.close()
 
     def select_answer(self, selected_option):
-        global clickable_butt, correct_bool, wrong_pixmap_height, submittable, correct_answer
-        if clickable_butt:
+        global is_clickable, correct_bool, wrong_pixmap_height, is_submittable, correct_answer
+        if is_clickable:
             wrong_pixmap_height = location_list[ord(selected_option) - ord('A')] - 40
             self.wrong_img.setGeometry(QtCore.QRect(wrong_pixmap_width, wrong_pixmap_height, 100, 100))
             correct_answer = selected_option
             correct_bool = (correct_answer == group_answer_data[shuffle_question[question_selector - 1]][1])
-            submittable = True
+            is_submittable = True
 
     def submit_click(self):
-        global clickable_butt
-        global submittable
-        if clickable_butt == True and submittable == True:
+        global is_clickable
+        global is_submittable
+        if is_clickable == True and is_submittable == True:
             global answer_string
             global question_selector
             global correct_bool
@@ -243,14 +208,14 @@ class Ui_MainWindow(object):
                         self.button_D.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][4]}")
                     self.button_noinput.setChecked(True)
                     correct_bool = False
-                    submittable = False
+                    is_submittable = False
                 else:
                     self.remove_questionui()
                     self.initial_label.setText(f"<html><head/><body><p align=\"center\">{success_message}: {correct_counter}/{question_limit}</p></body></html>")
                     self.end_ui()
             else:
                 self.counter.setText(f"<html><head/><body><p align=\"center\">{answer_string}</p></body></html>")
-                clickable_butt = False
+                is_clickable = False
                 self.button_noinput.setChecked(True)
                 self.wrong_img.setGeometry(QtCore.QRect(144, wrong_pixmap_height, 100, 100))
                 if group_answer_data[shuffle_question[question_selector - 1]][1] == "A":
@@ -296,9 +261,9 @@ class Ui_MainWindow(object):
         if self.timecount_value == incorrect_display_duration:
             self.timer.stop()
             global question_selector
-            global clickable_butt
+            global is_clickable
             global wrong_counter
-            global submittable
+            global is_submittable
             self.wrong_img.setGeometry(QtCore.QRect(6969, 6969, 100, 100))
             self.right_img.setGeometry(QtCore.QRect(6969, 6969, 100, 100))
             wrong_counter = wrong_counter + 1
@@ -313,23 +278,23 @@ class Ui_MainWindow(object):
                 if four_options_enabled == True:
                     self.button_D.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][4]}")
                 self.button_noinput.setChecked(True)
-                clickable_butt = True
-                submittable = False
+                is_clickable = True
+                is_submittable = False
             elif performance_ratio > passing_score_threshold:
                 self.remove_questionui()
                 self.initial_label.setText(f"<html><head/><body><p align=\"center\">{failure_message}</p></body></html>")
                 self.end_ui()
-                clickable_butt = True
+                is_clickable = True
             else:
                 self.remove_questionui()
                 self.initial_label.setText(f"<html><head/><body><p align=\"center\">"
                                            f"{success_message}: {correct_counter}/{question_limit}</p></body></html>")
                 self.end_ui()
-                clickable_butt = True
+                is_clickable = True
 
     def skip_click(self):
         global question_selector
-        if clickable_butt:
+        if is_clickable:
             self.counter.setText(f"<html><head/><body><p align=\"center\">{answer_string}</p></body></html>")
             skipped_questions.append(question_selector)
             question_selector = question_selector + 1
