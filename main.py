@@ -19,45 +19,28 @@ skipped_questions = []
 window_width = 1200
 window_height = 782
 window_center = int(window_width/2)
-dmv_data = open("dmv_data.txt", "r")
+dmv_data = open("question_data.txt", "r")
 dmv_lines = dmv_data.readlines()
 correct_data = open("correct_answers.txt", "r")
 cl = correct_data.readlines()
 correct_lines = []
 for sub in cl:
     correct_lines.append(sub.replace("\n", ""))
-qs_value = 0
-as_value = 1
-q = 1
-a = 1
 correct_counter = 0
 wrong_counter = 0
 location_list = []
 
-line_count = 0.0
-for line in dmv_lines:
-    line_count += 1
-question_count = line_count / 5
-qs_value = 0
-q = 1
-while q < question_selector:
-    qs_value = qs_value + 5
-    q = q + 1
-as_value = 1
-a = 1
-while a < question_selector:
-    as_value = as_value + 2
-    a = a + 1
+question_count = len(dmv_lines) / 5
 
-da = 0
+question_iterator = 0
 if question_limit > question_count:
     question_limit = int(question_count)
 
-sq = []
-while da < question_count:
-    sq.append(da)
-    da += 1
-random.shuffle(sq)
+shuffle_question = []
+while question_iterator < question_count:
+    shuffle_question.append(question_iterator)
+    question_iterator += 1
+random.shuffle(shuffle_question)
 
 group_dmv_data = []
 g = 0
@@ -70,14 +53,14 @@ while g < question_count:
     g += 1
 
 group_answer_data = []
-da = 0
+question_iterator = 0
 gad_line_start = 0
 gad_line_end = 2
-while da < question_count:
+while question_iterator < question_count:
     group_answer_data.append(correct_lines[gad_line_start:gad_line_end])
     gad_line_start = gad_line_start + 2
     gad_line_end = gad_line_end + 2
-    da += 1
+    question_iterator += 1
 
 correct_answer = ""
 correct_bool = False
@@ -88,7 +71,6 @@ right_pixmap_width = 6969
 right_pixmap_height = 6969
 clickable_butt = True
 submittable = False
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -234,7 +216,7 @@ class Ui_MainWindow(object):
             wrong_pixmap_height = location_list[ord(selected_option) - ord('A')] - 40
             self.wrong_img.setGeometry(QtCore.QRect(wrong_pixmap_width, wrong_pixmap_height, 100, 100))
             correct_answer = selected_option
-            correct_bool = (correct_answer == group_answer_data[sq[question_selector - 1]][1])
+            correct_bool = (correct_answer == group_answer_data[shuffle_question[question_selector - 1]][1])
             submittable = True
 
     def submit_click(self):
@@ -253,12 +235,12 @@ class Ui_MainWindow(object):
                 if question_selector != question_limit:
                     question_selector = question_selector + 1
                     self.randomize_choice_location()
-                    self.question_label.setText(f"    {group_dmv_data[sq[question_selector - 1]][0]}")
-                    self.button_A.setText(f"    {group_dmv_data[sq[question_selector - 1]][1]}")
-                    self.button_B.setText(f"    {group_dmv_data[sq[question_selector - 1]][2]}")
-                    self.button_C.setText(f"    {group_dmv_data[sq[question_selector - 1]][3]}")
+                    self.question_label.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][0]}")
+                    self.button_A.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][1]}")
+                    self.button_B.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][2]}")
+                    self.button_C.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][3]}")
                     if four_options_enabled == True:
-                        self.button_D.setText(f"    {group_dmv_data[sq[question_selector - 1]][4]}")
+                        self.button_D.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][4]}")
                     self.button_noinput.setChecked(True)
                     correct_bool = False
                     submittable = False
@@ -271,22 +253,22 @@ class Ui_MainWindow(object):
                 clickable_butt = False
                 self.button_noinput.setChecked(True)
                 self.wrong_img.setGeometry(QtCore.QRect(144, wrong_pixmap_height, 100, 100))
-                if group_answer_data[sq[question_selector - 1]][1] == "A":
+                if group_answer_data[shuffle_question[question_selector - 1]][1] == "A":
                     right_pixmap_width = 144
                     right_pixmap_height = location_list[0] - 40
                     self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
 
-                elif group_answer_data[sq[question_selector - 1]][1] == "B":
+                elif group_answer_data[shuffle_question[question_selector - 1]][1] == "B":
                     right_pixmap_width = 144
                     right_pixmap_height = location_list[1] - 40
                     self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
 
-                elif group_answer_data[sq[question_selector - 1]][1] == "C":
+                elif group_answer_data[shuffle_question[question_selector - 1]][1] == "C":
                     right_pixmap_width = 144
                     right_pixmap_height = location_list[2] - 40
                     self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
                 if four_options_enabled == True:
-                    if group_answer_data[sq[question_selector - 1]][1] == "D":
+                    if group_answer_data[shuffle_question[question_selector - 1]][1] == "D":
                         right_pixmap_width = 144
                         right_pixmap_height = location_list[3] - 40
                         self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
@@ -324,12 +306,12 @@ class Ui_MainWindow(object):
             if question_selector != question_limit and performance_ratio < passing_score_threshold:
                 question_selector = question_selector + 1
                 self.randomize_choice_location()
-                self.question_label.setText(f"    {group_dmv_data[sq[question_selector - 1]][0]}")
-                self.button_A.setText(f"    {group_dmv_data[sq[question_selector - 1]][1]}")
-                self.button_B.setText(f"    {group_dmv_data[sq[question_selector - 1]][2]}")
-                self.button_C.setText(f"    {group_dmv_data[sq[question_selector - 1]][3]}")
+                self.question_label.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][0]}")
+                self.button_A.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][1]}")
+                self.button_B.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][2]}")
+                self.button_C.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][3]}")
                 if four_options_enabled == True:
-                    self.button_D.setText(f"    {group_dmv_data[sq[question_selector - 1]][4]}")
+                    self.button_D.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][4]}")
                 self.button_noinput.setChecked(True)
                 clickable_butt = True
                 submittable = False
@@ -351,12 +333,12 @@ class Ui_MainWindow(object):
             self.counter.setText(f"<html><head/><body><p align=\"center\">{answer_string}</p></body></html>")
             skipped_questions.append(question_selector)
             question_selector = question_selector + 1
-            self.question_label.setText(f"    {group_dmv_data[sq[question_selector - 1]][0]}")
-            self.button_A.setText(f"    {group_dmv_data[sq[question_selector - 1]][1]}")
-            self.button_B.setText(f"    {group_dmv_data[sq[question_selector - 1]][2]}")
-            self.button_C.setText(f"    {group_dmv_data[sq[question_selector - 1]][3]}")
+            self.question_label.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][0]}")
+            self.button_A.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][1]}")
+            self.button_B.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][2]}")
+            self.button_C.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][3]}")
             if four_options_enabled == True:
-                self.button_D.setText(f"    {group_dmv_data[sq[question_selector - 1]][4]}")
+                self.button_D.setText(f"    {group_dmv_data[shuffle_question[question_selector - 1]][4]}")
             self.button_noinput.setChecked(True)
 
     def initial_layout(self):
@@ -395,16 +377,16 @@ class Ui_MainWindow(object):
         main_window.setWindowTitle(_translate("MainWindow", program_title))
         self.top_label.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" "
                                                         "color:#ffffff;"f"\">{program_title}</span></p></body></html>"))
-        self.question_label.setText(_translate("MainWindow", f"{group_dmv_data[sq[question_selector - 1]][0]}"))
+        self.question_label.setText(_translate("MainWindow", f"{group_dmv_data[shuffle_question[question_selector - 1]][0]}"))
         self.initial_label.setText(_translate("MainWindow", f"<html><head/><body><p align=\"center\">"
                                                             f"{initial_message}</p></body></html>"))
         self.counter.setText(_translate("MainWindow", f"<html><head/><body><p align=\"center\">"
                                                       f"{answer_string}</p></body></html>"))
-        self.button_A.setText(_translate("MainWindow", f"    {group_dmv_data[sq[question_selector - 1]][1]}"))
-        self.button_B.setText(_translate("MainWindow", f"    {group_dmv_data[sq[question_selector - 1]][2]}"))
-        self.button_C.setText(_translate("MainWindow", f"    {group_dmv_data[sq[question_selector - 1]][3]}"))
+        self.button_A.setText(_translate("MainWindow", f"    {group_dmv_data[shuffle_question[question_selector - 1]][1]}"))
+        self.button_B.setText(_translate("MainWindow", f"    {group_dmv_data[shuffle_question[question_selector - 1]][2]}"))
+        self.button_C.setText(_translate("MainWindow", f"    {group_dmv_data[shuffle_question[question_selector - 1]][3]}"))
         if four_options_enabled == True:
-            self.button_D.setText(_translate("MainWindow", f"    {group_dmv_data[sq[question_selector - 1]][4]}"))
+            self.button_D.setText(_translate("MainWindow", f"    {group_dmv_data[shuffle_question[question_selector - 1]][4]}"))
         self.submit_button.setText(_translate("MainWindow", "Submit"))
         self.submit_button_2.setText(_translate("MainWindow", "Skip Question"))
         self.submit_button_3.setText(_translate("MainWindow", "Quit Test"))
