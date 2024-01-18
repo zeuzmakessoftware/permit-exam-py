@@ -7,12 +7,13 @@ import random
 initial_message = "You will take this test"
 success_message = "Here is how well you did"
 failure_message = "You have failed"
-question_limit = 5
-program_title = "Permit Test Simulator"
-primary_color = "#bf4949"
-incorrect_display_duration = 69
-four_options_enabled = True
+question_limit = 10
 passing_score_threshold = 0.69
+incorrect_display_duration = 69
+program_title = "Permit Test Simulator"
+primary_color = "#2c4391"
+text_color = "#ffffff"
+four_options_enabled = False
 
 question_selector = 1
 skipped_questions = []
@@ -20,11 +21,11 @@ window_width = 1200
 window_height = 782
 window_center = int(window_width / 2)
 
-dmv_data = open("question_data.txt", "r")
+dmv_data = open("data/question_data.txt", "r")
 dmv_lines = dmv_data.readlines()
 dmv_data.close()
 
-correct_data = open("correct_answers.txt", "r")
+correct_data = open("data/correct_answers.txt", "r")
 cl = correct_data.readlines()
 correct_data.close()
 
@@ -58,9 +59,9 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(program_title)
         MainWindow.setFixedSize(window_width, window_height)
-        wrong_pixmap = QPixmap('wrong.png')
+        wrong_pixmap = QPixmap('images/wrong.png')
         wrong_pixmap = wrong_pixmap.scaled(50, 50, QtCore.Qt.KeepAspectRatio)
-        right_pixmap = QPixmap('right.png')
+        right_pixmap = QPixmap('images/right.png')
         right_pixmap = right_pixmap.scaled(50, 50, QtCore.Qt.KeepAspectRatio)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
@@ -76,8 +77,8 @@ class Ui_MainWindow(object):
         if four_options_enabled == True:
             self.button_D = self.create_button("button_D", lambda: self.select_answer('D'), self.centralwidget, QtCore.QRect(160, 6969, 800, 21), QtCore.QSize(0, 0), 18, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), False)
         self.button_noinput = self.create_button("no_input", None, self.centralwidget, QtCore.QRect(160, 6969, 361, 21), QtCore.QSize(100, 100), 17, "width: 55px;\nheight: 55px;", QtCore.QSize(100, 100), True)
-        self.right_img = self.create_img_label('right.png', "right_img", right_pixmap_width, right_pixmap_height)
-        self.wrong_img = self.create_img_label('wrong.png', "wrong_img", wrong_pixmap_width, wrong_pixmap_height)
+        self.right_img = self.create_img_label('images/right.png', "right_img", right_pixmap_width, right_pixmap_height)
+        self.wrong_img = self.create_img_label('images/wrong.png', "wrong_img", wrong_pixmap_width, wrong_pixmap_height)
         self.submit_button = self.create_submit_button("submit_button", QtCore.QRect(430, 6969, 341, 71), self.submit_click, self.centralwidget, primary_color)
         self.submit_button_2 = self.create_submit_button("submit_button_2", QtCore.QRect(50, 6969, 341, 71), self.skip_click, self.centralwidget, primary_color)
         self.submit_button_3 = self.create_submit_button("submit_button_3", QtCore.QRect(810, 6969, 341, 71), self.quit_program, self.centralwidget, primary_color)
@@ -152,7 +153,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         button.setFont(font)
         button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        button.setStyleSheet(f"background-color: {primary_color}; color:white; border-radius: 7px;")
+        button.setStyleSheet(f"background-color: {primary_color}; color:{text_color}; border-radius: 7px;")
         button.setObjectName(name)
         button.clicked.connect(click_action)
         return button
@@ -166,7 +167,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         button.setFont(font)
         button.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        button.setStyleSheet(f"background-color: {primary_color}; color:white; border-radius: 7px;")
+        button.setStyleSheet(f"background-color: {primary_color}; color:{text_color}; border-radius: 7px;")
         button.setObjectName(name)
         button.clicked.connect(click_action)
         return button
@@ -217,24 +218,24 @@ class Ui_MainWindow(object):
                 self.counter.setText(f"<html><head/><body><p align=\"center\">{answer_string}</p></body></html>")
                 is_clickable = False
                 self.button_noinput.setChecked(True)
-                self.wrong_img.setGeometry(QtCore.QRect(144, wrong_pixmap_height, 100, 100))
+                self.wrong_img.setGeometry(QtCore.QRect(134, wrong_pixmap_height, 100, 100))
                 if group_answer_data[shuffle_question[question_selector - 1]][1] == "A":
-                    right_pixmap_width = 144
+                    right_pixmap_width = 134
                     right_pixmap_height = location_list[0] - 40
                     self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
 
                 elif group_answer_data[shuffle_question[question_selector - 1]][1] == "B":
-                    right_pixmap_width = 144
+                    right_pixmap_width = 134
                     right_pixmap_height = location_list[1] - 40
                     self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
 
                 elif group_answer_data[shuffle_question[question_selector - 1]][1] == "C":
-                    right_pixmap_width = 144
+                    right_pixmap_width = 134
                     right_pixmap_height = location_list[2] - 40
                     self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
                 if four_options_enabled == True:
                     if group_answer_data[shuffle_question[question_selector - 1]][1] == "D":
-                        right_pixmap_width = 144
+                        right_pixmap_width = 134
                         right_pixmap_height = location_list[3] - 40
                         self.right_img.setGeometry(QtCore.QRect(right_pixmap_width, right_pixmap_height, 100, 100))
                 self.timer=QTimer()
@@ -341,7 +342,7 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         main_window.setWindowTitle(_translate("MainWindow", program_title))
         self.top_label.setText(_translate("MainWindow", "<html><head/><body><p align=\"center\"><span style=\" "
-                                                        "color:#ffffff;"f"\">{program_title}</span></p></body></html>"))
+                                                        f"color:{text_color};"f"\">{program_title}</span></p></body></html>"))
         self.question_label.setText(_translate("MainWindow", f"{group_dmv_data[shuffle_question[question_selector - 1]][0]}"))
         self.initial_label.setText(_translate("MainWindow", f"<html><head/><body><p align=\"center\">"
                                                             f"{initial_message}</p></body></html>"))
@@ -357,12 +358,11 @@ class Ui_MainWindow(object):
         self.submit_button_3.setText(_translate("MainWindow", "Quit Test"))
         self.start_button.setText(_translate("MainWindow", "Start Test"))
 
-
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
-    app.setWindowIcon(QIcon('permittest_logo.png'))
+    app.setWindowIcon(QIcon('images/permittest_logo.png'))
     ui = Ui_MainWindow()
     ui.setupUi(MainWindow)
     MainWindow.show()
